@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <form>
+        <!-- <input type="file" id="myFile" name="myFile"> -->
+        <input action="http://localhost:8080/upload" method="GET" onClick="embedded()" type="button" id="submitButton" value="Click Me">
+    </form>
+        <script>
+            function embedded(){
+                console.log(window.location.href);
+                fetch('https://demo.docusign.net/restapi/v2.1/accounts/1bc8a07a-5df6-4790-b6a9-c49ab46dd193/users', {
+                    mode: 'cors',
+                }).then((result) => {
+                    console.log(result)
+                })
+            }
+        </script>
+    <!-- <script src="main.js"></script> -->
+</body>
+</html>
+
+
+
+<!-- method="POST" enctype="multipart/form-data" -->
+<!-- eyJ0eXAiOiJNVCIsImFsZyI6IlJTMjU2Iiwia2lkIjoiNjgxODVmZjEtNGU1MS00Y2U5LWFmMWMtNjg5ODEyMjAzMzE3In0.AQoAAAABAAYABwCAjVJ9SlDZSAgAgBnZxEpQ2UgCAN5jIazYnbtGiDIlcKT0fB4VAAEAAAAYAAEAAAAFAAAADQAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0IgAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0NwBsDo-B-4ejT43yekQ7LmWHMACAtIQTR1DZSA.Voe1CZMRNvwZzTaSZmzfVXZJf7JUqD3d7cYcFwYR956kJX5ZF9ulCo-cg0qfXHTelbdp7eBTH-4f97KIX-OQit3bHQ6m3zYJ3cTv5ORqE8pXAA7Gq1_qcafOcnNkLh-jUGN5sZ7D4N9mH8vByhZ4bdM7jOVSfc_xuJ6x6gS62g27QfryNNqR2butVV3BQD4KWp5Rh6kM9jgComuzlpBWWCLa9GDI53VFAyHSwMvV7jh2-Pm4GA-bIMIPJyeu3Uo1GCUWzXUWWldivVU-gIQpfmYEnZpEYsZbKhbOHWdFFjPfsN01cnR9FuYFURs1RFzeMVtTiK-2oH8x1vB46wdh_A -->
+<!-- action="https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature&client_id=10db488b-8b66-410c-bb4e-abc2208c8b24&redirect_uri=http://localhost" -->
