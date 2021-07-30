@@ -3,6 +3,7 @@ var cors = require('cors')
 const axios = require('axios')
 var app = express();
 var bodyParser = require('body-parser')
+var qs = require('qs');
 // const docusign = require('docusign-esign')
 // var oAuth = docusign.ApiClient.OAuth;
 // var restApi = docusign.ApiClient.RestApi;
@@ -16,16 +17,14 @@ var config = {
     url:'http://localhost'
 }
 
-
 // secret 0b0427a6-e09f-446c-8761-c1e0b76e360d
-// redirect http://localhost
+// redirect http://localhost:5000/upload
 // integration 10db488b-8b66-410c-bb4e-abc2208c8b24
-
 
 const docusignCred = {
     accountID: "1bc8a07a-5df6-4790-b6a9-c49ab46dd193",
     username: "tanujdd@gmail.com",
-    password: "Computers99!!",
+    password: "glass99!!",
     integratorKey: "10db488b-8b66-410c-bb4e-abc2208c8b24",
 }
 
@@ -33,85 +32,92 @@ var fileUpload = require('express-fileupload');
 app.use(cors());
 app.use(fileUpload());
 app.use(bodyParser.urlencoded({ extended: true })); 
-
+app.use(bodyParser.json())
+ 
 //routes
-app.get('/', function(req, res){
+app.get('/upload', function(req, res){
     res.sendFile('index.html', { root: '.'});
 });
 
 
-app.get('/upload', function (req, res) {
-    // console.log(req.files.myFile);
-    console.log("This is req.body: " + req.body)
-    res.redirect('https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature&client_id=10db488b-8b66-410c-bb4e-abc2208c8b24&redirect_uri=http://localhost:5000')
+let authorization_code = '';
+let access_token = '';
+let refresh_token = '';
+
+app.post('/upload', function (req, res) {
+    res.redirect('https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature&client_id=10db488b-8b66-410c-bb4e-abc2208c8b24&redirect_uri=http://localhost:5000/upload')
+    //console.log("This is URL ", req.body.tempName)
+
+    var url = new URL(req.body.tempName);
+    authorization_code = new URLSearchParams(url.search).get('code');
+    //console.log("This is access token", authorization_code)
+
+    getAccess();
+
+    getUsers();
+})
+
+const getAccess = () => {
     
-});
+    // Exchange the authorization code with an access token by POST request on /oath/token
+    var data = qs.stringify({
+        'grant_type': 'authorization_code',
+        'code': authorization_code 
+    });
+
+    // Integration + : + Secret converted to base64 and prefixed with "Basic"
+    let str = '10db488b-8b66-410c-bb4e-abc2208c8b24' + ":" + "0b0427a6-e09f-446c-8761-c1e0b76e360d"
+    let auth_header = Buffer.from(str).toString('base64')
+    auth_header = "Basic " + auth_header;
+    //console.log("This is auth_header " + auth_header)
+
+    var config = {
+        method: 'post',
+        url: 'https://account-d.docusign.com/oauth/token',
+        headers: { 
+          'Authorization': auth_header, // auth_header here
+          'Content-Type': 'application/x-www-form-urlencoded', 
+          'Cookie': '__RequestVerificationToken=ARlrEQtmxCzlAq8U-y-jacMB0'
+        },
+        data : data
+      };
 
 
-// var config = {
-//     method: 'get',
-//     url: 'https://demo.docusign.net/restapi/v2.1/accounts/1bc8a07a-5df6-4790-b6a9-c49ab46dd193/users',
-//     headers: { 
-//       'Authorization': 'Bearer eyJ0eXAiOiJNVCIsImFsZyI6IlJTMjU2Iiwia2lkIjoiNjgxODVmZjEtNGU1MS00Y2U5LWFmMWMtNjg5ODEyMjAzMzE3In0.AQoAAAABAAUABwAAZ5kFDVHZSAgAAKe8E1BR2UgCAN5jIazYnbtGiDIlcKT0fB4VAAEAAAAYAAEAAAAFAAAADQAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0IgAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0MAAAoDMiCVHZSDcAbA6PgfuHo0-N8npEOy5lhw.uJkG3thVIiFeYdcQkjUYPH28luh4-IU92M8jEiK7wtpVhWKEn2126nWaq1orFG-fB3uVqFhErRzzrnJ6R9sE3zLuAoiVVhiwppGiNZZJIh4jfZMaePvXoNlkpDfveV7m-VUHWmmKPLTLNSeICXikVF7ryisv_4Mj8-OX4Xk38JfkoykzaCj9dLK8wUXbuwTN3BQIuNgPhIYu5x4hkVbXtadMPNjkUuBb2wtbKMBdSaXvHN_uzS8S_d8asnTAK3tWz0XzKn4X3G066ob0Cu55j1hhKW_8kReWRxOVyTgEelOX65wJrLiVSvAL3IXEtlbVP2nc85_j-XYqAJGepPYLlQ'
-//     }
-//   };
-  
-//   axios(config)
-//   .then(function (response) {
-//     //console.log(JSON.stringify(response.data));
-//   })
-//   .catch(function (error) {
-//     //console.log(error);
-//   });
+    // Untested
+    axios(config)
+    .then(function (response) {
+        access_token = response.data.access_token;
+        refresh_token = response.data.refresh_token;
+
+        //console.log("This is access token " + access_token);
+        //console.log("This is refresh token " + refresh_token);
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+}
 
 
+const getUsers = () => {
+    // Make API call with the access_token
+    access_token = "Bearer " + access_token;
+    var config = {
+        method: 'get',
+        url: 'https://demo.docusign.net/restapi/v2.1/accounts/1bc8a07a-5df6-4790-b6a9-c49ab46dd193/users',
+        headers: { 
+          'Authorization': access_token
+        }
+      };
 
 
-
-
-
-
-
-
-
-
-
-
-//   var code = 'eyJ0eXAiOiJNVCIsImFsZyI6IlJTMjU2Iiwia2lkIjoiNjgxODVmZjEtNGU1MS00Y2U5LWFmMWMtNjg5ODEyMjAzMzE3In0.AQsAAAABAAUABwCAyzuk0lHZSAgAgAtfshVS2UgCAN5jIazYnbtGiDIlcKT0fB4VAAEAAAAYAAEAAAAFAAAADQAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0IgAkAAAAMTBkYjQ4OGItOGI2Ni00MTBjLWJiNGUtYWJjMjIwOGM4YjI0EgABAAAACwAAAGludGVyYWN0aXZlMACA6kWe0lHZSDcAbA6PgfuHo0-N8npEOy5lhw.1qverAHfaoX2vAt8pYQabZdA-WVm2lTG_5N71WSjMQTorq-07hbJmaXl9JtQICpO2n3CBiiUMnxWN6OTWTqU2mw3umQUkZ_I-Rib_fE6_SZaN3bpXOi07WJYQKjfd-DQAwUnaOk57A1uiumTSCMe6VExNnQDfJISs6w3vKG9wt6mYOY4iV_LVLwQMtxAqaoUkdn2800virSrYB0zcklzyt3ldSZMArP7NlZ-LgK1qC4Z0yz0C0s8aZmE5fjSIOQYHZZ6V1UlVzNzQpfS9nnP0CPMXfkBm7sh7kAT5gXh8BC6X96s2V7By8QxVfPlRdNLpB26t3-HvDupoeabt0fPFQ'
-//   //console.log("This is the api call for authorization URI " + docAPI.ApiClient.getAuthorizationUri(docusignCred.integratorKey, 'signature', 'http://localhost', "code"));
-
-//   var apiClient = new docusign.ApiClient( {
-//       basePath: restApi.BasePath.PRODUCTION,
-//       oAuthBasePath: oAuth.BasePath.PRODUCTION
-//   })
-
-//     apiClient.generateAccessToken(docusignCred.integratorKey, '0b0427a6-e09f-446c-8761-c1e0b76e360d', code).then(function(oAuthToken) {
-        
-//         assert.equal(err, undefined);
-//         assert.notEqual(oAuthToken, undefined);
-//         assert.notEqual(oAuthToken.accessToken, undefined);
-//         assert.ok(oAuthToken.expiresIn > 0);
-
-//         console.log(oAuthToken);
-
-
-//         apiClient.getUserInfo(oAuthToken.accessToken)
-//           .then(function(userInfo){
-//             assert.equal(err, undefined);
-//             assert.notEqual(userInfo, undefined);
-//             assert.notEqual(userInfo.accounts, undefined);
-//             assert.ok(userInfo.accounts.length > 0);
-//             console.log("UserInfo: " + userInfo);
-//             // parse first account's basePath
-//             // below code required for production, no effect in demo (same
-//             // domain)
-//             apiClient.setBasePath(userInfo.accounts[0].baseUri + "/restapi");
-//             return done(oAuthToken)
-//           })
-//           .catch(function(err){
-//             return done(err);
-//           });
-//     })
+    axios(config)
+    .then(function (response) {
+        console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+}
 
 
 var server = app.listen(5000, function() {

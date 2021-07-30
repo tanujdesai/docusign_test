@@ -6,21 +6,17 @@
     <title></title>
 </head>
 <body>
-    <form>
-        <!-- <input type="file" id="myFile" name="myFile"> -->
-        <input action="http://localhost:8080/upload" method="GET" onClick="embedded()" type="button" id="submitButton" value="Click Me">
+ 
+    <form action="http://localhost:5000/upload" method = "POST">
+        <input name="tempName"  type="text" value="Send auth code to server!" id="sendURL">
+        <button type="submit">Send to server</button>   
     </form>
-        <script>
-            function embedded(){
-                console.log(window.location.href);
-                fetch('https://demo.docusign.net/restapi/v2.1/accounts/1bc8a07a-5df6-4790-b6a9-c49ab46dd193/users', {
-                    mode: 'cors',
-                }).then((result) => {
-                    console.log(result)
-                })
-            }
-        </script>
-    <!-- <script src="main.js"></script> -->
+   
+    <script>
+        //window.location.replace("https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature&client_id=10db488b-8b66-410c-bb4e-abc2208c8b24&redirect_uri=http://localhost:5000/upload")
+        document.getElementById("sendURL").value = window.location.href;
+    </script>
+
 </body>
 </html>
 
